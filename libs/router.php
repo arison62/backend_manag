@@ -130,7 +130,7 @@ class Router
     }
     private function match($end_point, $uri)
     {
-        error_log($end_point);
+      
         $end_point = preg_replace('/:(\w+)/', '\w+', $end_point);
         $end_point = '#^' . $end_point . '$#';
 
