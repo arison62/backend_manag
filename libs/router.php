@@ -110,6 +110,8 @@ class Router
                     if (is_array($route['handler'])) {
 
                         foreach ($route['handler'] as $handler) {
+                            if($res::$response_sent)
+                                break;
                             $handler($req, $res);
                         }
                     } else {

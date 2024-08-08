@@ -2,8 +2,8 @@
 
 $root = $_SERVER['DOCUMENT_ROOT'] ?? dirname(__DIR__);
 
-require $root . '/vendor/autoload.php';
-require $root . '/models/db.php';
+require_once $root . '/vendor/autoload.php';
+require_once $root . '/models/db.php';
 
 use Firebase\JWT\JWT;
 use Dotenv\Dotenv;
