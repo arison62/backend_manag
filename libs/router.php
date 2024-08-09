@@ -1,5 +1,9 @@
 
 <?php
+
+use HttpUtls\Response;
+use HttpUtls\Request;
+
 if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
     header('Access-Control-Allow-Origin: *');
     header('Access-Control-Allow-Methods: POST, GET, DELETE, PUT, PATCH, OPTIONS');
@@ -78,8 +82,9 @@ class Router
         $method = strtolower($_SERVER['REQUEST_METHOD']);
         $uri = parse_url($uri_with_query, PHP_URL_PATH);
         $route_found = false;
-        $req = 'Request';
-        $res = 'Response';
+        
+        $req = Request::class;
+        $res = Response::class;
         
         foreach ($this->route as $route) {
 
