@@ -12,4 +12,7 @@ $router->post('/user/auth/login', login());
 
 $router->post('/customer/add', [auth_middleware(), add_customer()]);
 $router->post('/customer/update', [auth_middleware(), update_customer()]);
+$router->post('/customer/delete', [auth_middleware(), delete_customer()]);
+$router->get('/customer/get/:id', [auth_middleware(), get_customer()]);
+
 $router->dispatch();

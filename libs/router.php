@@ -77,7 +77,7 @@ class Router
 
     public function dispatch()
     {
-
+        
         $uri_with_query = $_SERVER['REQUEST_URI'];
         $method = strtolower($_SERVER['REQUEST_METHOD']);
         $uri = parse_url($uri_with_query, PHP_URL_PATH);

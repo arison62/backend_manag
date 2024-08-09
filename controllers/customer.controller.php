@@ -125,4 +125,66 @@ function update_customer()
     };
 }
 
+function delete_customer(){
 
+
+    return function ($req, $res) {
+        global $root;
+      
+        $db_path = $root . '/' . $_ENV['DB_PATH'];
+        $db = new MyDB($db_path);
+        
+        $customer_id = isset($req::body()['id']) ? $req::body()['id'] : null;
+
+        $query = 'DELETE FROM Client WHERE id = :id';
+
+        $stmt = $db->prepare($query);
+        $stmt->bindValue(':id', $customer_id);
+        $result = $stmt->execute();
+
+        if ($result) {
+            $res::status(200);
+            $res::json(array('error' => false, 'message' => 'Customer deleted', 'data' => []));
+            return;
+        } else {
+            $res::status(500);
+            $res::json(array('error' => true, 'message' => 'Internal server error', 'data' => []));
+            return;
+        }
+    };
+   
+}
+
+
+function get_customer(){
+
+    return function ($req, $res) {
+
+       
+        global $root;
+        $db_path = $root . '/' . $_ENV['DB_PATH'];
+        $db = new MyDB($db_path);
+
+        $customer_id = isset($req::$params['id']) ? $req::$params['id'] : null;
+        $query = 'SELECT * FROM Client WHERE id = :id';
+
+         $stmt = $db->prepare($query);
+
+        $stmt->bindValue(':id', $customer_id);
+        $result = $stmt->execute();
+        $customer =  [];
+        while($row = $result->fetchArray(SQLITE3_ASSOC)){
+            array_push($customer, $row);
+        }
+
+        if($customer){
+            $res::status(200);
+            $res::json(array('error' => false, 'message' => 'Customer found', 'data' => $customer));
+            return;
+        }else{
+            $res::status(404);
+            $res::json(array('error' => true, 'message' => 'Customer not found', 'data' => []));
+            return;
+        }
+    };
+}
