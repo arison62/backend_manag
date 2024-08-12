@@ -7,6 +7,16 @@ CREATE TABLE Utilisateur (
   date_creation TEXT DEFAULT CURRENT_TIMESTAMP
 );
 
+-- Table Porte-feuille
+CREATE TABLE Porte_feuille (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  utilisateur_id INTEGER,
+  nom TEXT NOT NULL,
+  description TEXT,
+  solde REAL,
+  FOREIGN KEY(utilisateur_id) REFERENCES Utilisateur(id)
+);
+
 -- Table Client
 CREATE TABLE Client (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -27,20 +37,6 @@ CREATE TABLE Fournisseur (
   adresse TEXT
 );
 
--- Table Produit
-CREATE TABLE Produit (
-  id INTEGER PRIMARY KEY AUTOINCREMENT,
-  nom TEXT NOT NULL,
-  prix_unitaire REAL
-);
-
--- Table Service
-CREATE TABLE Service (
-  id INTEGER PRIMARY KEY AUTOINCREMENT,
-  nom TEXT NOT NULL,
-  description TEXT,
-  tarif REAL
-);
 
 -- Table Facture
 CREATE TABLE Facture (
@@ -49,6 +45,7 @@ CREATE TABLE Facture (
   date_emission TEXT NOT NULL,
   date_echeance TEXT,
   montant_total REAL,
+  status TEXT CHECK(status IN ('en_cours', 'payee', 'annulee')),
   type TEXT CHECK(type IN ('client', 'fournisseur')),
   utilisateur_id INTEGER,
   FOREIGN KEY(utilisateur_id) REFERENCES Utilisateur(id)
@@ -62,12 +59,11 @@ CREATE TABLE Transactions (
   type TEXT CHECK(type IN ('depense', 'entree')),
   montant REAL,
   date_transaction TEXT,
-  mode_paiement TEXT,
+  portefeuille_id INTEGER,
   reference_paiement TEXT,
+  FOREIGN KEY(portefeuille_id) REFERENCES Porte_feuille(id),
   FOREIGN KEY(facture_id) REFERENCES Facture(id)
 );
-
-
 
 -- Table Facture_Client
 CREATE TABLE Facture_Client (
@@ -86,6 +82,28 @@ CREATE TABLE Facture_Fournisseur (
   FOREIGN KEY (facture_id) REFERENCES Facture(id),
   FOREIGN KEY (fournisseur_id) REFERENCES Fournisseur(id)
 );
+
+
+
+
+-- Table Produit
+CREATE TABLE Produit (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  nom TEXT NOT NULL,
+  prix_unitaire REAL
+);
+
+-- Table Service
+CREATE TABLE Service (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  nom TEXT NOT NULL,
+  description TEXT,
+  tarif REAL
+);
+
+
+
+
 
 -- Table LigneFacture
 CREATE TABLE LigneFacture (

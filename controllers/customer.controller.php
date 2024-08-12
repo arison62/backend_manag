@@ -98,13 +98,14 @@ function update_customer()
             $customer_id = $body['id'];
 
             try {
-                $query = 'UPDATE Client SET nom = :nom, email = :email, telephone = :telephone, adresse = :address WHERE id = :id';
+                $query = 'UPDATE Client SET nom = :nom, email = :email, telephone = :telephone, adresse = :address WHERE id = :id AND utilisateur_id = :utilisateur_id';
                 $stmt = $db->prepare($query);
                 $stmt->bindValue(':nom', $nom);
                 $stmt->bindValue(':email', $email);
                 $stmt->bindValue(':telephone', $telephone);
                 $stmt->bindValue(':address', $address);
                 $stmt->bindValue(':id', $customer_id);
+                $stmt->bindValue(':utilisateur_id', $user_id);
                 $result = $stmt->execute();
 
                 if ($result) {
@@ -135,11 +136,18 @@ function delete_customer(){
         $db = new MyDB($db_path);
         
         $customer_id = isset($req::body()['id']) ? $req::body()['id'] : null;
+        $user_id = $req::$headers['user_id'];
+        if ($user_id == null) {
+            $res::status(401);
+            $res::json(array('error' => true, 'message' => 'Unauthorized', 'data' => []));
+            return;
+        }
 
-        $query = 'DELETE FROM Client WHERE id = :id';
+        $query = 'DELETE FROM Client WHERE id = :id AND utilisateur_id = :utilisateur_id';
 
         $stmt = $db->prepare($query);
         $stmt->bindValue(':id', $customer_id);
+        $stmt->bindValue(':utilisateur_id', $user_id);
         $result = $stmt->execute();
 
         if ($result) {
@@ -164,13 +172,21 @@ function get_customer(){
         global $root;
         $db_path = $root . '/' . $_ENV['DB_PATH'];
         $db = new MyDB($db_path);
+        $user_id = $req::$headers['user_id'];
 
+        if ($user_id == null) {
+            $res::status(401);
+            $res::json(array('error' => true, 'message' => 'Unauthorized', 'data' => []));
+            return;
+        }
         $customer_id = isset($req::$params['id']) ? $req::$params['id'] : null;
-        $query = 'SELECT * FROM Client WHERE id = :id';
+        $query = 'SELECT * FROM Client WHERE id = :id AND id_utilisateur = :id_utilisateur';
 
          $stmt = $db->prepare($query);
 
         $stmt->bindValue(':id', $customer_id);
+        $stmt->bindValue(':id_utilisateur', $user_id);
+
         $result = $stmt->execute();
         $customer =  [];
         while($row = $result->fetchArray(SQLITE3_ASSOC)){
