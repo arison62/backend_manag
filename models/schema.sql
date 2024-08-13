@@ -41,8 +41,8 @@ CREATE TABLE Fournisseur (
 -- Table Facture
 CREATE TABLE Facture (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
-  numero TEXT UNIQUE NOT NULL,
-  date_emission TEXT NOT NULL,
+  numero TEXT,
+  date_emission TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
   date_echeance TEXT,
   montant_total REAL,
   status TEXT CHECK(status IN ('en_cours', 'payee', 'annulee')),
@@ -118,3 +118,11 @@ CREATE TABLE LigneFacture (
   FOREIGN KEY (produit_id) REFERENCES Produit(id),
   FOREIGN KEY (service_id) REFERENCES Service(id)
 );
+
+CREATE TRIGGER add_numero
+AFTER INSERT
+On Facture
+WHEN new.numero IS NULL OR new.numero Not LIKE 'INVOICE_%'
+BEGIN
+	UPDATE Facture SET numero = ('INVOICE_' || id) WHERE numero NOT LIKE 'INVOICE_%' OR numero IS NULL;
+END

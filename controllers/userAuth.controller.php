@@ -24,7 +24,7 @@ function signup()
         $email = $body['email'];
         $password = $body['password'];
         $name = $body['name'];
-
+        error_log('password: ' . $password);
         if (empty($email) || empty($password)) {
             $res::status(400);
             $res::json(array('error' => true, 'message' => 'Email and password are required', 'data' => []));

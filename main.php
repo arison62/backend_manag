@@ -6,6 +6,7 @@ require_once './controllers/customer.controller.php';
 require_once './middlewares/auth.middleware.php';
 require_once './controllers/user.controller.php';
 require_once './controllers/wallet.controller.php';
+require_once './controllers/facture.controller.php';
 
 $router = new Router(array('base_url' => '/api_manag/v1'));
 
@@ -27,5 +28,13 @@ $router->post('/wallet/update', [auth_middleware(), update_wallet()]);
 $router->post('/wallet/delete', [auth_middleware(), delete_wallet()]);
 $router->get('/wallet/get/:id', [auth_middleware(), get_wallets()]);
 $router->get('/wallet/get', [auth_middleware(), get_wallets()]);
+
+
+$router->post('/invoice/add', [auth_middleware(), add_invoice()]);
+$router->post('/invoice/update', [auth_middleware(), update_invoice()]);
+$router->post('/invoice/delete', [auth_middleware(), delete_invoice()]);
+$router->get('/invoice/get/:id', [auth_middleware(), get_invoice()]);
+$router->get('/invoice/get', [auth_middleware(), get_invoice()]);
+
 
 $router->dispatch();
