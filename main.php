@@ -6,7 +6,7 @@ require_once './controllers/customer.controller.php';
 require_once './middlewares/auth.middleware.php';
 require_once './controllers/user.controller.php';
 require_once './controllers/wallet.controller.php';
-require_once './controllers/facture.controller.php';
+require_once './controllers/invoice.controller.php';
 
 $router = new Router(array('base_url' => '/api_manag/v1'));
 

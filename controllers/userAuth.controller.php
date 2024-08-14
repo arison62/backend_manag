@@ -24,7 +24,7 @@ function signup()
         $email = $body['email'];
         $password = $body['password'];
         $name = $body['name'];
-        error_log('password: ' . $password);
+
         if (empty($email) || empty($password)) {
             $res::status(400);
             $res::json(array('error' => true, 'message' => 'Email and password are required', 'data' => []));
@@ -95,8 +95,8 @@ function login()
                         $jwt = JWT::encode($payload, $secret_key, 'HS256');
                         $res::status(200);
                         $res::json(array('error' => false, 'message' => 'User logged in', 'data' => array('token' => $jwt)));
-                        return ;
-                    } catch ( ExpiredException $e) {
+                        return;
+                    } catch (ExpiredException $e) {
                         // token expire
                         $res::status(401);
                         $res::json(array('error' => true, 'message' => 'Token expired', 'data' => []));
