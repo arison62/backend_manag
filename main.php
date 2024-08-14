@@ -31,7 +31,7 @@ $router->get('/wallet/get', [auth_middleware(), get_wallets()]);
 
 
 $router->post('/invoice/add', [auth_middleware(), add_invoice()]);
-$router->post('/invoice/update', [auth_middleware(), update_invoice()]);
+$router->post('/invoice/update/:id', [auth_middleware(), update_invoice()]);
 $router->post('/invoice/delete', [auth_middleware(), delete_invoice()]);
 $router->get('/invoice/get/:id', [auth_middleware(), get_invoice()]);
 $router->get('/invoice/get', [auth_middleware(), get_invoice()]);

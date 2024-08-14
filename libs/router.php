@@ -198,6 +198,7 @@ class Router
             $result = preg_split('/=/', $val);
             $query[$result[0]] = $result[1];
         }
+     
         return $query;
     }
 

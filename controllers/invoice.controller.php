@@ -43,7 +43,7 @@ function add_invoice()
                 $data = $db->querySingle("SELECT * FROM Facture WHERE id = $invoice_id", true);
 
                 if ($type == 'client') {
-                    
+
                     // Facture payee  donnant lieu a une transaction
                     if ($status == 'payee') {
 
@@ -133,40 +133,64 @@ function get_invoice()
             return;
         }
 
+        $type = isset($req::$query['type']) ? $req::$query['type'] : null; // client || fournisseur
+        $status = isset($req::$query['status']) ? $req::$query['status'] : null; // en_cours || payee || annulee
         $invoice_id = isset($req::$params['id']) ? $req::$params['id'] : null;
+
+        $query = <<<SQLQ
+            SELECT 
+            Facture.id AS facture_id,
+            Facture.numero,
+            Facture.date_emission,
+            Facture.date_echeance,
+            Facture.montant_total,
+            Facture.status,
+            Client.id AS client_id,
+            Client.nom AS client_nom,
+            Client.email AS client_email,
+            Client.telephone AS client_telephone,
+            Client.adresse AS client_adresse
+        FROM 
+            Facture_Client
+        INNER JOIN 
+            Facture ON Facture_Client.facture_id = Facture.id
+        INNER JOIN 
+            Client ON Facture_Client.client_id = Client.id
+        SQLQ;
+
         $data = [];
-        $query = 'SELECT * FROM Facture WHERE utilisateur_id = :utilisateur_id';
-        if ($invoice_id) {
-            $query .= ' AND id = :invoice_id';
+        if ($status) {
+            $query .= " WHERE Facture.status = '$status'";
         }
+        if($invoice_id){
+            $query .= " WHERE Facture.id = $invoice_id";
+        }
+
+      
 
         try {
             $stmt = $db->prepare($query);
-            $stmt->bindValue(':utilisateur_id', $user_id);
-            if ($invoice_id) {
-                $stmt->bindValue(':invoice_id', $invoice_id);
-            }
-
             $result = $stmt->execute();
-
-
-            if ($result) {
+            if (!$result) {
+                $res::status(500);
+                $res::json(array('error' => true, 'message' => 'Internal server error', 'data' => []));
+                return;
+            } else {
                 while ($row = $result->fetchArray(SQLITE3_ASSOC)) {
                     array_push($data, $row);
                 }
 
-                if ($invoice_id) {
-                    $data = $data[0];
+                if (empty($data)) {
+                    $res::status(404);
+                    $res::json(array('error' => true, 'message' => 'Invoice not found', 'data' => []));
+                    return;
+                } else {
+                    $res::status(200);
+                    $res::json(array('error' => false, 'message' => 'Invoice found', 'data' => $data));
+                    return;
                 }
-                $res::status(200);
-                $res::json(array('error' => false, 'message' => 'Invoice retrieved', 'data' => $data));
-                return;
-            } else {
-                $res::status(500);
-                return;
             }
         } catch (Throwable $th) {
-
             $res::status(500);
             $res::json(array('error' => true, 'message' => 'Internal server error', 'data' => []));
             return;
@@ -174,9 +198,7 @@ function get_invoice()
     };
 }
 
-function update_invoice()
-{
-
+function update_invoice() {
     return function ($req, $res) {
         global $root;
         $db_path = $root . '/' . $_ENV['DB_PATH'];
@@ -188,52 +210,110 @@ function update_invoice()
             $res::json(array('error' => true, 'message' => 'Unauthorized', 'data' => []));
             return;
         }
+
+        $invoice_id = $req::$params['id']; // Assumes invoice ID is passed as a URL parameter
         $body = $req::body();
 
-        $date_echeance = isset($body['date_echeance']) ? $body['date_echeance'] : null;
-        $montant_total = isset($body['montant_total']) ? $body['montant_total'] : null;
-        $type = isset($body['type']) ? $body['type'] : null; // client || fournisseur
-        $status = isset($body['status']) ? $body['status'] : null; // en_cour || payee || annulee
+        // Build the SQL update query dynamically
+        $fields_to_update = [];
+        $query_params = [];
 
-        $invoice_id = isset($body['invoice_id']) ? $body['invoice_id'] : null;
-
-        $query = 'UPDATE Facture SET ';
-
-        if (!empty($date_echeance)) {
-            $query .= 'date_echeance = "' . $date_echeance . '",';
+        if (isset($body['date_echeance'])) {
+            $fields_to_update[] = 'date_echeance = :date_echeance';
+            $query_params[':date_echeance'] = $body['date_echeance'];
         }
-        if (!empty($montant_total)) {
-            $query .= 'montant_total = "' . $montant_total . '",';
+        if (isset($body['montant_total'])) {
+            $fields_to_update[] = 'montant_total = :montant_total';
+            $query_params[':montant_total'] = $body['montant_total'];
         }
-        if (!empty($type)) {
-            $query .= 'type = "' . $type . '",';
-        }
-        if (!empty($status)) {
-            $query .= 'status = "' . $status . '",';
+        if (isset($body['status'])) {
+            $fields_to_update[] = 'status = :status';
+            $query_params[':status'] = $body['status'];
         }
 
-        $query = rtrim($query, ',');
+        // Only proceed if there's something to update
+        if (!empty($fields_to_update)) {
+            $update_query = 'UPDATE Facture SET ' . implode(', ', $fields_to_update) . ' WHERE id = :invoice_id AND utilisateur_id = :user_id';
+            $query_params[':invoice_id'] = $invoice_id;
+            $query_params[':user_id'] = $user_id;
 
-        $query .= " WHERE id = " . $invoice_id . " AND utilisateur_id = " . $user_id . "";
+            try {
+                $stmt = $db->prepare($update_query);
+                foreach ($query_params as $param => $value) {
+                    $stmt->bindValue($param, $value);
+                }
+                $result = $stmt->execute();
 
-        try {
-            $result = $db->exec($query);
-            if ($result) {
-                $res::status(200);
-                $res::json(array('error' => false, 'message' => 'Invoice updated', 'data' => []));
-                return;
-            } else {
+                if ($result) {
+                    // Cas d'une Facture payé
+                    if (isset($body['status']) && $body['status'] == 'payee') {
+                        $wallet_id = isset($body['wallet_id']) ? $body['wallet_id'] : null;
+                        $type_trans = isset($body['type_trans']) ? $body['type_trans'] : null;
+
+                        if ($wallet_id && $type_trans) {
+                            $wallet = $db->querySingle("SELECT * FROM Portefeuille WHERE id = $wallet_id", true);
+                            $new_amount = $type_trans == 'entree' ? $wallet['solde'] + $body['montant_total'] : $wallet['solde'] - $body['montant_total'];
+
+                            if ($new_amount < 0) {
+                                /* Suppression de la mise à jour si erreur */
+                                $db->exec("ROLLBACK");
+                                $res::status(400);
+                                $res::json(array('error' => true, 'message' => 'Insufficient balance', 'data' => []));
+                                return;
+                            }
+
+                            $query = 'UPDATE Portefeuille SET solde = :solde WHERE id = :id';
+                            $stmt = $db->prepare($query);
+                            $stmt->bindValue(':solde', $new_amount);
+                            $stmt->bindValue(':id', $wallet_id);
+                            $result = $stmt->execute();
+
+                            if ($result) {
+                                $query = 'INSERT INTO Transactions (facture_id, montant, type, portefeuille_id)
+                                VALUES(:facture_id, :montant, :type_trans, :portefeuille_id)';
+                                
+                                $stmt = $db->prepare($query);
+                                $stmt->bindValue(':facture_id', $invoice_id);
+                                $stmt->bindValue(':montant', $body['montant_total']);
+                                $stmt->bindValue(':type_trans', $type_trans);
+                                $stmt->bindValue(':portefeuille_id', $wallet_id);
+                                $result = $stmt->execute();
+
+                                if (!$result) {
+                                    $res::status(500);
+                                    $res::json(array('error' => true, 'message' => 'Internal server error during transaction creation', 'data' => []));
+                                    return;
+                                }
+                            } else {
+                                $res::status(500);
+                                $res::json(array('error' => true, 'message' => 'Internal server error during wallet update', 'data' => []));
+                                return;
+                            }
+                        }
+                    }
+
+                    $data = $db->querySingle("SELECT * FROM Facture WHERE id = $invoice_id", true);
+                    $res::status(200);
+                    $res::json(array('error' => false, 'message' => 'Invoice updated successfully', 'data' => $data));
+                    return;
+                } else {
+                    $res::status(500);
+                    $res::json(array('error' => true, 'message' => 'Internal server error', 'data' => []));
+                    return;
+                }
+            } catch (Throwable $th) {
                 $res::status(500);
                 $res::json(array('error' => true, 'message' => 'Internal server error', 'data' => []));
                 return;
             }
-        } catch (Throwable $th) {
-            $res::status(500);
-            $res::json(array('error' => true, 'message' => 'Internal server error', 'data' => []));
+        } else {
+            $res::status(400);
+            $res::json(array('error' => true, 'message' => 'No data provided for update', 'data' => []));
             return;
         }
     };
 }
+
 
 function delete_invoice()
 {
