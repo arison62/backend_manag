@@ -53,7 +53,7 @@ function signup()
                 $jwt = JWT::encode($payload, $secret_key, 'HS256');
 
                 $res::status(200);
-                $res::json(array('error' => false, 'message' => 'User created', 'data' => array('token' => $jwt)));
+                $res::json(array('error' => false, 'message' => 'User created', 'data' => array('token' => $jwt, 'email' => $email)));
                 return;
             } else {
                 $res::status(500);
@@ -94,7 +94,7 @@ function login()
 
                         $jwt = JWT::encode($payload, $secret_key, 'HS256');
                         $res::status(200);
-                        $res::json(array('error' => false, 'message' => 'User logged in', 'data' => array('token' => $jwt)));
+                        $res::json(array('error' => false, 'message' => 'User logged in', 'data' => array('token' => $jwt, 'email' => $email)));
                         return;
                     } catch (ExpiredException $e) {
                         // token expire

@@ -44,9 +44,11 @@ function update_user()
         }
         $body = $req::body();
         $name = isset($body['name']) ? $body['name'] : null;
+        $firstName = isset($body['firstName']) ? $body['firstName'] : null;
         $email = isset($body['email']) ? $body['email'] : null;
         $address = isset($body['address']) ? $body['address'] : null;
         $password = isset($body['password']) ? $body['password'] : null;
+        $phone = isset($body['phone']) ? $body['phone'] : null;
 
        $password_hash = password_hash($password, PASSWORD_DEFAULT); 
 
@@ -55,6 +57,8 @@ function update_user()
         $query .= empty($email) ? "" : "email = '" . $email . "',";
         $query .= empty($address) ? "" : "adresse = '" . $address . "',";
         $query .= empty($password) ? "" : "mot_de_passe = '" . $password_hash . "',";
+        $query .= empty($phone) ? "" : "telephone = '" . $phone . "',";
+        $query .= empty($firstName) ? "": "prenom = '" .$firstName ."',";
         if($query[strlen($query) - 1] == ','){
             $query = substr($query, 0, -1);
         }

@@ -11,7 +11,7 @@ require_once './controllers/invoice.controller.php';
 $router = new Router(array('base_url' => '/api_manag/v1'));
 
 $router->post('/user/auth/signup', signup());
-$router->post('/user/auth/login', login());
+$router->post('/user/auth/signin', login());
 
 $router->get('/user/get', [auth_middleware(), get_user()]);
 $router->post('/user/update', [auth_middleware(), update_user()]);
