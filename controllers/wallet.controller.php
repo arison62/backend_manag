@@ -18,7 +18,7 @@ function add_wallet()
         $body = $req::body();
         $name = isset($body['name']) ? $body['name'] : null;
         $solde = isset($body['solde']) ? $body['solde'] : null;
-        $desc = isset($body['desc']) ? $body['desc'] : null;
+        $desc = isset($body['description']) ? $body['description'] : null;
 
         if (empty($name) || empty($solde)) {
             $res::status(400);
@@ -67,7 +67,7 @@ function update_wallet()
 
         $name = isset($body['name']) ? $body['name'] : null;
         $solde = isset($body['solde']) ? $body['solde'] : null;
-        $desc = isset($body['desc']) ? $body['desc'] : null;
+        $desc = isset($body['description']) ? $body['description'] : null;
         $wallet_id = isset($body['wallet_id']) ? $body['wallet_id'] : null;
 
         $query = 'UPDATE Portefeuille SET ';
@@ -185,6 +185,10 @@ function get_wallets()
                 $res::status(200);
                 if(!empty($id_wallet)){
                     $data = $data[0];
+                }
+                if(empty($data)){
+                    $res::status(404);
+                    return $res::json(array('error'=>true, 'message' => 'Wallet not found', 'data' => []));
                 }
                 $res::json(array('error' => false, 'message' => 'Wallets retrieved', 'data' => $data));
                 return;
