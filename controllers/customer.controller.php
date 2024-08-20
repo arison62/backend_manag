@@ -18,7 +18,7 @@ function add_customer()
 
         global $root;
         $user_id = $req::$headers['user_id'];
-        if($user_id == null){
+        if ($user_id == null) {
             $res::status(401);
             $res::json(array('error' => true, 'message' => 'Unauthorized', 'data' => []));
             return;
@@ -41,7 +41,7 @@ function add_customer()
 
             try {
                 $query = 'INSERT INTO Client (nom, email, telephone, adresse, utilisateur_id) VALUES (:nom, :email, :telephone, :address, :utilisateur_id)';
-                error_log('user_id: ' . $user_id);
+
                 $stmt = $db->prepare($query);
                 $stmt->bindValue(':nom', $nom);
                 $stmt->bindValue(':email', $email);
@@ -75,7 +75,7 @@ function update_customer()
 
         global $root;
         $user_id = $req::$headers['user_id'];
-        if($user_id == null){
+        if ($user_id == null) {
             $res::status(401);
             $res::json(array('error' => true, 'message' => 'Unauthorized', 'data' => []));
             return;
@@ -126,15 +126,16 @@ function update_customer()
     };
 }
 
-function delete_customer(){
+function delete_customer()
+{
 
 
     return function ($req, $res) {
         global $root;
-      
+
         $db_path = $root . '/' . $_ENV['DB_PATH'];
         $db = new MyDB($db_path);
-        
+
         $customer_id = isset($req::body()['id']) ? $req::body()['id'] : null;
         $user_id = $req::$headers['user_id'];
         if ($user_id == null) {
@@ -160,15 +161,15 @@ function delete_customer(){
             return;
         }
     };
-   
 }
 
 
-function get_customer(){
+function get_customer()
+{
 
     return function ($req, $res) {
 
-       
+
         global $root;
         $db_path = $root . '/' . $_ENV['DB_PATH'];
         $db = new MyDB($db_path);
@@ -179,27 +180,41 @@ function get_customer(){
             $res::json(array('error' => true, 'message' => 'Unauthorized', 'data' => []));
             return;
         }
+        $query = '';
         $customer_id = isset($req::$params['id']) ? $req::$params['id'] : null;
-        $query = 'SELECT * FROM Client WHERE id = :id AND id_utilisateur = :id_utilisateur';
-
-         $stmt = $db->prepare($query);
-
-        $stmt->bindValue(':id', $customer_id);
-        $stmt->bindValue(':id_utilisateur', $user_id);
-
-        $result = $stmt->execute();
-        $customer =  [];
-        while($row = $result->fetchArray(SQLITE3_ASSOC)){
-            array_push($customer, $row);
+        if ($customer_id) {
+            $query = 'SELECT * FROM Client WHERE id = :id AND utilisateur_id = :utilisateur_id';
+        } else {
+            $query = 'SELECT * FROM Client WHERE  utilisateur_id = :utilisateur_id';
         }
 
-        if($customer){
-            $res::status(200);
-            $res::json(array('error' => false, 'message' => 'Customer found', 'data' => $customer));
-            return;
-        }else{
-            $res::status(404);
-            $res::json(array('error' => true, 'message' => 'Customer not found', 'data' => []));
+
+        try {
+            $stmt = $db->prepare($query);
+            if ($customer_id) {
+                $stmt->bindValue(':id', $customer_id);
+            }
+
+            $stmt->bindValue(':utilisateur_id', $user_id);
+
+            $result = $stmt->execute();
+            $customer =  [];
+            while ($row = $result->fetchArray(SQLITE3_ASSOC)) {
+                array_push($customer, $row);
+            }
+            error_log('query' . $stmt->getSQL(true));
+            if (!empty($customer)) {
+                $res::status(200);
+                $res::json(array('error' => false, 'message' => 'Customer found', 'data' => $customer));
+                return;
+            } else {
+                $res::status(404);
+                $res::json(array('error' => true, 'message' => 'Customer not found', 'data' => []));
+                return;
+            }
+        } catch (Throwable $th) {
+            $res::status(500);
+            $res::json(array('error' => true, 'message' => 'Internal server error', 'data' => []));
             return;
         }
     };
