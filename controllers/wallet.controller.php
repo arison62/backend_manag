@@ -81,10 +81,9 @@ function update_wallet()
         if (!empty($desc)) {
             $query .= 'description = "' . $desc . '",';
         }
-
+        $query = substr($query, 0, -1);
         $query .= " WHERE id = " .$wallet_id. " AND utilisateur_id = " .$user_id . "";
-       
-        error_log('Query : ' .$query);
+      
         try {
             $result = $db->exec($query);
             if ($result) {
