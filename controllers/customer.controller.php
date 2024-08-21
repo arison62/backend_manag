@@ -202,7 +202,7 @@ function get_customer()
             while ($row = $result->fetchArray(SQLITE3_ASSOC)) {
                 array_push($customer, $row);
             }
-         
+            error_log('query' . $stmt->getSQL(true));
             if (!empty($customer)) {
                 $res::status(200);
                 $res::json(array('error' => false, 'message' => 'Customer found', 'data' => $customer));
