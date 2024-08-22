@@ -155,7 +155,7 @@ function get_invoice()
         INNER JOIN 
             Facture ON Facture_Client.facture_id = Facture.id
         INNER JOIN 
-            Client ON Facture_Client.client_id = Client.id
+            Client ON Client.utilisateur_id = $user_id
         SQLQ;
 
         $data = [];
@@ -165,9 +165,6 @@ function get_invoice()
         if($invoice_id){
             $query .= " WHERE Facture.id = $invoice_id";
         }
-
-      
-
         try {
             $stmt = $db->prepare($query);
             $result = $stmt->execute();

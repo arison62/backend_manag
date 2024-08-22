@@ -174,7 +174,6 @@ function get_customer()
         $db_path = $root . '/' . $_ENV['DB_PATH'];
         $db = new MyDB($db_path);
         $user_id = $req::$headers['user_id'];
-
         if ($user_id == null) {
             $res::status(401);
             $res::json(array('error' => true, 'message' => 'Unauthorized', 'data' => []));
@@ -202,7 +201,7 @@ function get_customer()
             while ($row = $result->fetchArray(SQLITE3_ASSOC)) {
                 array_push($customer, $row);
             }
-           
+
             if (!empty($customer)) {
                 $res::status(200);
                 $res::json(array('error' => false, 'message' => 'Customer found', 'data' => $customer));
